@@ -1,10 +1,13 @@
 #include "defs.h"
+#include <pthread.h>
 
 int main() {
   // Initialize the random number generator
   srand(time(NULL));
   
   char name[MAX_STR];
+  GhostType* ghost;
+  pthread_t ghostThread;
 
   // Create the house: You may change this, but it's here for demonstration purposes
   // Note: This code will not compile until you have implemented the house functions and structures
@@ -17,7 +20,10 @@ int main() {
     createHunter(name, &house, i);
     // printHunter(house.hunters[i]);
   }
-  createGhost(&house);
+  ghost = createGhost(&house);
+  pthread_create(&ghostThread,NULL,ghostActivity,(void*)ghost);
+  hunterActivity((void*)house.hunters[0]);
+  pthread_join(ghostThread, NULL);
   printRoomList(&house.rooms);
   return 0;
 }

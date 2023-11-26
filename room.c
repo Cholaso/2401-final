@@ -25,6 +25,7 @@ void connectRooms(RoomType *first, RoomType *second) {
 
 void printRoom(RoomType* room) {
   char ghostName[MAX_STR];
+  char evidence[MAX_STR];
   printf("| %19s | Neighbors: ", room->name);
   for(RoomNodeType* it = room->neighbors.head; it!=NULL; it=it->next) {
     printf(" %s ", it->room->name);
@@ -38,6 +39,11 @@ void printRoom(RoomType* room) {
   if(room->ghost!=NULL){
     ghostToString(room->ghost->ghostVariant, ghostName);
     printf("| GHOST: %s", ghostName);
+  }
+  printf(" | Evidence: ");
+  for(EvidenceNodeType* it = room->evidenceLeft.head; it!=NULL; it=it->next) {
+    evidenceToString(*(it->evidence), evidence);
+    printf("%s,", evidence, *(it->evidence));
   }
   printf(" |\n");
   //to be continues...

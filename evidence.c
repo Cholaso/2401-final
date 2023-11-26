@@ -9,3 +9,20 @@ void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence){
     evidenceList->tail = toAdd;
   }
 }
+
+EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device) {
+  EvidenceNodeType* prev = NULL;
+  EvidenceType* evidence = NULL;
+  for(EvidenceNodeType* it = evidenceList->head; it!=NULL; it=it->next) {
+    if(*(it->evidence) == device){
+      if(it == evidenceList->head) evidenceList->head = it->next;
+      else prev->next = it->next;
+      if(it == evidenceList->tail) evidenceList->tail = prev;
+      evidence = it->evidence;
+      free(it);
+      break;
+    }
+    prev = it;
+  }
+  return evidence;
+}

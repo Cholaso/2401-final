@@ -123,15 +123,21 @@ void printRoomList(RoomListType* roomList);
 void createHunter(char* name, HouseType* house, EvidenceType device);
 void printHunter(HunterType* hunter);
 void addHunter(HunterType** hunters, HunterType* hunter, int* count);
+void collectEvidence(HunterType* hunter);
+void* hunterActivity(void* voidHunter);
 
 //house functions
 void populateRooms(HouseType* house);
 
 //evidence functions
 void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence);
+EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device);
 
 //main functions
 void askForName(char* name);
 
 // ghost functions
-void createGhost(HouseType* house);
+GhostType* createGhost(HouseType* house);
+void leaveEvidence(GhostType* ghost);
+void changeRoom(GhostType* ghost);
+void* ghostActivity(void* ghost);
