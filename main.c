@@ -21,8 +21,9 @@ int main() {
     // printHunter(house.hunters[i]);
   }
   ghost = createGhost(&house);
+  
   pthread_create(&ghostThread,NULL,ghostActivity,(void*)ghost);
-  hunterActivity((void*)house.hunters[0]);
+  // hunterActivity((void*)house.hunters[0], (void*)&house);
   pthread_join(ghostThread, NULL);
   printRoomList(&house.rooms);
   return 0;

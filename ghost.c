@@ -7,17 +7,19 @@ GhostType* createGhost(HouseType* house) {
   for(int i = 0; i<roomPos; i++) {
     current = current->next;
   }
-  initGhost(randomGhost(), current->room, &ghost);
+  GhostClass variant = randomGhost();
+  EvidenceType (*possibleEvidence)[3] = &house->variantEvidence[variant];
+  initGhost(variant, possibleEvidence, current->room, &ghost);
   current->room->ghost = ghost;
-  l_ghostInit(ghost->ghostVariant, current->room);
+  l_ghostInit(ghost->ghostVariant, current->room->name);
   return ghost;
 }
 
 void leaveEvidence(GhostType* ghost) {
-  static EvidenceType variantEvidence[4][3] = {{EMF,TEMPERATURE,FINGERPRINTS},{EMF,TEMPERATURE,SOUND},{EMF,FINGERPRINTS,SOUND},
-  {TEMPERATURE,FINGERPRINTS,SOUND}};
   int evidenceChoice = randInt(0,3);
-  EvidenceType* evidence = &variantEvidence[ghost->ghostVariant][evidenceChoice];
+  // EvidenceType* evidence = &(*(ghost->possibleEvidence)[evidenceChoice]);
+  EvidenceType* arr3 = *(ghost->possibleEvidence);
+  EvidenceType* evidence = &(arr3[evidenceChoice]);
   addEvidence(&ghost->room->evidenceLeft, evidence);
   l_ghostEvidence(*evidence, ghost->room->name);
 }
@@ -36,7 +38,7 @@ void changeRoom(GhostType* ghost){
 }
 
 void* ghostActivity(void* voidGhost) {
-  GhostType* ghost = (GhostType*) voidGhost;
+  GhostType* ghost = (GhostType*)voidGhost;
   int madeDecision = C_FALSE;
   while(ghost->boredom < BOREDOM_MAX) {
     int huntersInRoom = ghost->room->hunterCount > 0;
@@ -52,7 +54,7 @@ void* ghostActivity(void* voidGhost) {
     } else if (choice == 1 && !huntersInRoom){//leave room
       changeRoom(ghost);
       madeDecision = C_FALSE;
-      sleep(1);
+      // sleep(1);
       continue;
     } // choice == 2: do nothing
     else{
@@ -60,7 +62,7 @@ void* ghostActivity(void* voidGhost) {
     }
     
     madeDecision = C_TRUE;
-    sleep(1);
+    // sleep(1);
   }
   l_ghostExit(LOG_BORED);
   return NULL;
