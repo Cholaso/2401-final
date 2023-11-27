@@ -1,3 +1,5 @@
+//Nicholas O'Neil : Jazeel Abdul-Jabbar
+//101200961       : 101253438
 #include "defs.h"
 
 // WE DO NOT REMOVE HUNTERS FROM THE HOUSE UNTIL THE VERY END, SEE 4.2
@@ -5,7 +7,7 @@
 void createHunter(char *name, HouseType *house, EvidenceType device) {
   HunterType* hunter;
   RoomType* van = house->rooms.head->room;
-  initHunter(name, van, device, &house->sharedEvidence,&house->variantEvidence, &house->mutex, &hunter);
+  initHunter(name, van, device, &house->sharedEvidence,&house->variantEvidence, &house->mutex, &house->sufficientEvidenceFound, &hunter);
   addHunter(hunter, van);
   house->hunters[(house->hunterCount)++] = hunter;
   l_hunterInit(name, device);
@@ -51,16 +53,16 @@ void printHunter(HunterType* hunter) {
   printf("| Name: %s | Boredom: %d | Fear: %d | Device: %s | Location: %s |\n", hunter->name, hunter->boredom, hunter->fear, evidence, hunter->room->name);
 }
 
-int reviewEvidence(HunterType* hunter) {
+void reviewEvidence(HunterType* hunter) {
   int sufficient = hunter->sharedEvidence->size >= 3;
   l_hunterReview(hunter->name, sufficient ? LOG_SUFFICIENT : LOG_INSUFFICIENT);
-  return sufficient;
+  if(sufficient) *hunter->sufficientEvidenceFound = C_TRUE;
 }
 void* hunterActivity(void* voidHunter) {
   HunterType* hunter = (HunterType*) voidHunter;
   enum LoggerDetails reasonForExit = LOG_UNKNOWN;
   enum hunterDecisions {COLLECT_EV, MOVE, REVIEW_EV, DECISION_COUNT};
-  while(hunter->boredom < BOREDOM_MAX && hunter->fear < FEAR_MAX) {
+  while(hunter->boredom < BOREDOM_MAX && hunter->fear < FEAR_MAX && *hunter->sufficientEvidenceFound == C_FALSE) {
     enum hunterDecisions choice = randInt(0, DECISION_COUNT);
     if(hunter->room->ghost!=NULL) {
       hunter->fear++;
@@ -80,17 +82,14 @@ void* hunterActivity(void* voidHunter) {
     }
     else if (choice==REVIEW_EV) {
       sem_wait(hunter->mutex);
-      int sufficient = reviewEvidence(hunter);
+      reviewEvidence(hunter);
       sem_post(hunter->mutex);
-      if(sufficient) {
-        reasonForExit = LOG_EVIDENCE;
-        break;
-      }
     }
-    // sleep(1);
+    usleep(HUNTER_WAIT*1000);
   }
   if(hunter->fear >= FEAR_MAX) reasonForExit = LOG_FEAR; 
   else if (hunter->boredom >= BOREDOM_MAX) reasonForExit = LOG_BORED;
+  else if(*hunter->sufficientEvidenceFound == C_TRUE) reasonForExit = LOG_EVIDENCE;
   sem_wait(hunter->mutex);
   removeHunter(hunter);
   l_hunterExit(hunter->name, reasonForExit);

@@ -1,3 +1,7 @@
+//Nicholas O'Neil : Jazeel Abdul-Jabbar
+//101200961       : 101253438
+
+//All code in this file is given as a part of the assignment and not written by us.
 #include "defs.h"
 
 /*

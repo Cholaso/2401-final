@@ -1,3 +1,5 @@
+//Nicholas O'Neil : Jazeel Abdul-Jabbar
+//101200961       : 101253438
 #include "defs.h"
 
 RoomType* createRoom(char* name) {
@@ -47,4 +49,13 @@ void printRoom(RoomType* room) {
   }
   printf(" |\n");
   //to be continues...
+}
+
+void cleanupRoomList(RoomListType* roomList) {
+  RoomNodeType* temp;
+  while(roomList->head!=NULL) {
+    temp = roomList->head;
+    roomList->head = roomList->head->next;
+    free(temp);
+  }
 }

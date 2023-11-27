@@ -1,3 +1,5 @@
+//Nicholas O'Neil : Jazeel Abdul-Jabbar
+//101200961       : 101253438
 #include "defs.h"
 #include <pthread.h>
 
@@ -17,7 +19,7 @@ int main() {
   populateRooms(&house);
   for(int i = 0; i<NUM_HUNTERS; i++) {
     askForName(name);
-    createHunter(name, &house, i);
+    createHunter(name, &house, i%EV_COUNT);
   }
   ghost = createGhost(&house);
   
@@ -29,7 +31,15 @@ int main() {
     pthread_join(hunterThread[i],NULL);
   }
   pthread_join(ghostThread, NULL);
-  printHouse(&house);
+  // printHouse(&house);
+  if(house.sufficientEvidenceFound == C_TRUE) {
+    for(int i = 0; i<GHOST_COUNT; i++) {
+      for(int j = 0; i<EV_COUNT-1; i++) {
+        if
+      }
+    }
+  }
+  cleanupHouse(&house);
   return 0;
 }
 
@@ -43,4 +53,24 @@ void askForName(char* name) {
     while((c = getchar()) != '\n');
   }
   name[strcspn(name, "\n")] = '\0'; // set the value of room[index of "\n"] to 0
+}
+
+void printGameResults(HouseType* house) {
+  int huntersThatLeft = 0;
+  printf("[GAME RESULTS]: \n");
+  printf("Hunters that have exited: \n");
+  for(int i = 0; i<house->hunterCount; i++) {
+    HunterType *hunter = house->hunters[i];
+    if(hunter->boredom >= BOREDOM_MAX) {
+      printf("[%s] has exited due to [BOREDOM].\n", hunter->name);
+      huntersThatLeft++;
+    }
+    else if(hunter->fear >= FEAR_MAX) {
+      printf("[%s] has exited due to [FEAR].\n",hunter->name);
+      huntersThatLeft++;
+    } 
+  }
+  if(huntersThatLeft == house->hunterCount) {
+    printf("[GAME RESULT]: All hunters left, ghost wins.\n");
+  }
 }

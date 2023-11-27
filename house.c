@@ -1,3 +1,5 @@
+//Nicholas O'Neil : Jazeel Abdul-Jabbar
+//101200961       : 101253438
 #include "defs.h"
 
 /*
@@ -54,7 +56,10 @@ void populateRooms(HouseType* house) {
     addRoom(&house->rooms, garage);
     addRoom(&house->rooms, utility_room);
 }
-
+/*
+    Prints all data in our house in a readable format.
+    in: house - our house
+*/
 void printHouse(HouseType* house) {
   for(RoomNodeType* it = house->rooms.head; it!=NULL; it=it->next) {
     printRoom(it->room);
@@ -65,4 +70,23 @@ void printHouse(HouseType* house) {
     evidenceToString(*it->evidence, evidenceStr);
     printf("%s, ", evidenceStr);
   }
+}
+/*
+    Cleans up our house and all data within, freeing all dynamic memory in our program.
+    in/out: house - our house
+*/
+void cleanupHouse(HouseType* house) {
+  for(int i = 0; i<house->hunterCount; i++) {
+    free(house->hunters[i]);
+  }
+  RoomNodeType* temp;
+  while(house->rooms.head!=NULL) {
+    temp = house->rooms.head;
+    house->rooms.head = house->rooms.head->next;
+    cleanupEvidenceList(&temp->room->evidenceLeft);
+    cleanupRoomList(&temp->room->neighbors);
+    free(temp->room);
+    free(temp);
+  }
+  cleanupEvidenceList(&house->sharedEvidence);
 }

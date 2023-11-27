@@ -1,3 +1,5 @@
+//Nicholas O'Neil : Jazeel Abdul-Jabbar
+//101200961       : 101253438
 #include "defs.h"
 #include <semaphore.h>
 void initRoomList(RoomListType*roomList) {
@@ -10,7 +12,7 @@ void initEvidenceList(EvidenceListType *evidenceList) {
   evidenceList->size = 0;
 }
 
-void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], sem_t* mutex, HunterType **hunter) {
+void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], sem_t* mutex, int* sufficientEvidenceFound, HunterType **hunter) {
   *hunter = (HunterType*) malloc(sizeof(HunterType));
   strcpy((*hunter)->name, name);
   (*hunter)->room = room;
@@ -19,15 +21,17 @@ void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListTyp
   (*hunter)->fear = (*hunter)->boredom = 0;
   (*hunter)->variantEvidence = variantEvidence;
   (*hunter)->mutex = mutex;
+  (*hunter)->sufficientEvidenceFound = sufficientEvidenceFound;
 }
 
-void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, sem_t *mutex, GhostType **ghost) {
+void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, sem_t *mutex, int* sufficientEvidenceFound, GhostType **ghost) {
   *ghost = (GhostType*) malloc(sizeof(GhostType));
   (*ghost)->ghostVariant = variant;
   (*ghost)->room = room;
   (*ghost)->boredom = 0;
   (*ghost)->possibleEvidence = variantEvidence;
   (*ghost)->mutex = mutex;
+  (*ghost)->sufficientEvidenceFound = sufficientEvidenceFound;
 }
 
 void initRoom(char *name, RoomType **room) {
@@ -39,16 +43,6 @@ void initRoom(char *name, RoomType **room) {
   for(int i = 0; i<NUM_HUNTERS; i++) (*room)->hunters[i] = NULL;
   (*room)->hunterCount = 0;
 }
-
-// void initRoomNode(RoomType *room, RoomNodeType *next, RoomNodeType *this) {
-//   this->room = room;
-//   this->next = next;
-// }
-
-// void initEvidenceNode(EvidenceType *evidence, EvidenceNodeType *next, EvidenceNodeType *this) {
-//   this->evidence = evidence;
-//   this->next = next;
-// }
 
 void initHouse(HouseType *house) {
   initRoomList(&house->rooms);
@@ -63,4 +57,5 @@ void initHouse(HouseType *house) {
     }
   }
   sem_init(&house->mutex, NULL, 1);
+  house->sufficientEvidenceFound = C_FALSE;
 }

@@ -1,4 +1,11 @@
+//Nicholas O'Neil : Jazeel Abdul-Jabbar
+//101200961       : 101253438
 #include "defs.h"
+/* 
+    Adds evidence to the evidence list
+    in/out: evidenceList - the list that we store the evidence in
+    out: evidence - the evidence we are adding
+*/
 void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence){
   EvidenceNodeType* toAdd = (EvidenceNodeType*) malloc(sizeof(EvidenceNodeType));
   toAdd->evidence = evidence;
@@ -11,6 +18,11 @@ void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence){
   evidenceList->size++;
 }
 
+/* 
+    removes first instance of device readable evidence from the evidence list
+    in/out: evidenceList - the list that we store the evidence in
+    in: device - the device we are using to find evidence
+*/
 EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device) {
   EvidenceNodeType* prev = NULL;
   EvidenceType* evidence = NULL;
@@ -27,4 +39,16 @@ EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device
     prev = it;
   }
   return evidence;
+}
+/* 
+    Cleans all dynamically allocated memory from the evidence list
+    in/out: evidenceList - the list that we are cleaning
+*/
+void cleanupEvidenceList(EvidenceListType* evidenceList) {
+  EvidenceNodeType* temp;
+  while(evidenceList->head!=NULL) {
+    temp = evidenceList->head;
+    evidenceList->head = evidenceList->head->next;
+    free(temp);
+  }
 }
