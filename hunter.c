@@ -5,7 +5,7 @@
 void createHunter(char *name, HouseType *house, EvidenceType device) {
   HunterType* hunter;
   RoomType* van = house->rooms.head->room;
-  initHunter(name, van, device, &house->sharedEvidence,&house->variantEvidence, &hunter);
+  initHunter(name, van, device, &house->sharedEvidence,&house->variantEvidence, &house->mutex, &hunter);
   addHunter(hunter, van);
   house->hunters[(house->hunterCount)++] = hunter;
   l_hunterInit(name, device);
@@ -52,8 +52,9 @@ void printHunter(HunterType* hunter) {
 }
 
 int reviewEvidence(HunterType* hunter) {
-  if(hunter->sharedEvidence->size < 3) return C_FALSE;
-  return C_TRUE;
+  int sufficient = hunter->sharedEvidence->size >= 3;
+  l_hunterReview(hunter->name, sufficient ? LOG_SUFFICIENT : LOG_INSUFFICIENT);
+  return sufficient;
 }
 void* hunterActivity(void* voidHunter) {
   HunterType* hunter = (HunterType*) voidHunter;
@@ -68,31 +69,32 @@ void* hunterActivity(void* voidHunter) {
       hunter->boredom++;
     }
     if(choice == COLLECT_EV) {
-      sem_wait(&hunter->mutex);
+      sem_wait(hunter->mutex);
       collectEvidence(hunter);
-      sem_post(&hunter->mutex);
+      sem_post(hunter->mutex);
     }
     else if (choice == MOVE) { 
-      sem_wait(&hunter->mutex);
+      sem_wait(hunter->mutex);
       moveHunter(hunter);     
-      sem_post(&hunter->mutex);
+      sem_post(hunter->mutex);
     }
     else if (choice==REVIEW_EV) {
-      sem_wait(&hunter->mutex);
-      int result = reviewEvidence(hunter);
-      if(result==C_FALSE) l_hunterReview(hunter->name, LOG_INSUFFICIENT);
-      else l_hunterReview(hunter->name, LOG_SUFFICIENT);
-      sem_post(&hunter->mutex);
-      if(result==C_TRUE) return NULL;
+      sem_wait(hunter->mutex);
+      int sufficient = reviewEvidence(hunter);
+      sem_post(hunter->mutex);
+      if(sufficient) {
+        reasonForExit = LOG_EVIDENCE;
+        break;
+      }
     }
     // sleep(1);
   }
   if(hunter->fear >= FEAR_MAX) reasonForExit = LOG_FEAR; 
   else if (hunter->boredom >= BOREDOM_MAX) reasonForExit = LOG_BORED;
-  sem_wait(&hunter->mutex);
+  sem_wait(hunter->mutex);
   removeHunter(hunter);
   l_hunterExit(hunter->name, reasonForExit);
-  sem_post(&hunter->mutex);
+  sem_post(hunter->mutex);
   return NULL;
 }
 

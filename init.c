@@ -1,4 +1,5 @@
 #include "defs.h"
+#include <semaphore.h>
 void initRoomList(RoomListType*roomList) {
   roomList->head = roomList->tail = NULL;
   roomList->size = 0;
@@ -9,7 +10,7 @@ void initEvidenceList(EvidenceListType *evidenceList) {
   evidenceList->size = 0;
 }
 
-void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], HunterType **hunter) {
+void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], sem_t* mutex, HunterType **hunter) {
   *hunter = (HunterType*) malloc(sizeof(HunterType));
   strcpy((*hunter)->name, name);
   (*hunter)->room = room;
@@ -17,15 +18,16 @@ void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListTyp
   (*hunter)->sharedEvidence = sharedEvidence;
   (*hunter)->fear = (*hunter)->boredom = 0;
   (*hunter)->variantEvidence = variantEvidence;
-  sem_init(&(*hunter)->mutex, NULL, 1);
+  (*hunter)->mutex = mutex;
 }
 
-void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, GhostType **ghost) {
+void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, sem_t *mutex, GhostType **ghost) {
   *ghost = (GhostType*) malloc(sizeof(GhostType));
   (*ghost)->ghostVariant = variant;
   (*ghost)->room = room;
   (*ghost)->boredom = 0;
   (*ghost)->possibleEvidence = variantEvidence;
+  (*ghost)->mutex = mutex;
 }
 
 void initRoom(char *name, RoomType **room) {
@@ -60,4 +62,5 @@ void initHouse(HouseType *house) {
       house->variantEvidence[i][j] = init[i][j];
     }
   }
+  sem_init(&house->mutex, NULL, 1);
 }

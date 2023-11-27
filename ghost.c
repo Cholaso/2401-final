@@ -10,7 +10,7 @@ GhostType* createGhost(HouseType* house) {
   }
   GhostClass variant = randomGhost();
   EvidenceType (*possibleEvidence)[3] = &house->variantEvidence[variant];
-  initGhost(variant, possibleEvidence, current->room, &ghost);
+  initGhost(variant, possibleEvidence, current->room, &house->mutex, &ghost);
   current->room->ghost = ghost;
   l_ghostInit(ghost->ghostVariant, current->room->name);
   return ghost;
@@ -50,11 +50,21 @@ void* ghostActivity(void* voidGhost) {
       choice = randInt(0, DECISION_COUNT);
       ghost->boredom++;     
     } 
-    if(choice== LEAVE_EVIDENCE) leaveEvidence(ghost);
-    else if (choice == MOVE) changeRoom(ghost);
+    if(choice== LEAVE_EVIDENCE) {
+      sem_wait(ghost->mutex);
+      leaveEvidence(ghost);     
+      sem_post(ghost->mutex);
+    }
+    else if (choice == MOVE) {
+      sem_wait(ghost->mutex);
+      changeRoom(ghost);     
+      sem_post(ghost->mutex);
+    }
     // else printf("Ghost does nothing...\n");
     // sleep(1);
   }
+  ghost->room->ghost = NULL;
+  ghost->room = NULL;
   l_ghostExit(LOG_BORED);
   return NULL;
 }

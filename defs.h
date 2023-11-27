@@ -57,13 +57,14 @@ struct Hunter {
   EvidenceType device;
   EvidenceListType* sharedEvidence;
   EvidenceType (*variantEvidence)[GHOST_COUNT][EV_COUNT-1];
-  sem_t mutex;
+  sem_t* mutex;
 };
 struct Ghost {
   int boredom;
   GhostClass ghostVariant;
   RoomType* room;
   EvidenceType (*possibleEvidence)[EV_COUNT-1];
+  sem_t* mutex;
 };
 
 struct Room {
@@ -88,6 +89,7 @@ struct House {
   EvidenceListType sharedEvidence;
   EvidenceType variantEvidence[GHOST_COUNT][EV_COUNT-1];
   int hunterCount;
+  sem_t mutex;
 };
 
 struct args{
@@ -116,8 +118,8 @@ void l_ghostEvidence(enum EvidenceType evidence, char* room);
 //init functions
 void initRoomList(RoomListType* roomList);
 void initEvidenceList(EvidenceListType* evidenceList);
-void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], HunterType **hunter);
-void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, GhostType **ghost);
+void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], sem_t * mutex, HunterType **hunter);
+void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, sem_t *mutex, GhostType **ghost);
 void initRoom(char* name, RoomType** room);
 void initRoomNode(RoomType* room, RoomNodeType* next, RoomNodeType* this);
 void initEvidenceNode( EvidenceType* evidence, EvidenceNodeType* next, EvidenceNodeType* this);
