@@ -1,8 +1,9 @@
 #include "defs.h"
+#include <time.h>
 
 GhostType* createGhost(HouseType* house) {
   GhostType* ghost;
-  int roomPos = randInt(1, house->rooms.size-1);
+  int roomPos = randInt(1, house->rooms.size);
   RoomNodeType* current = house->rooms.head;
   for(int i = 0; i<roomPos; i++) {
     current = current->next;
@@ -16,10 +17,8 @@ GhostType* createGhost(HouseType* house) {
 }
 
 void leaveEvidence(GhostType* ghost) {
-  int evidenceChoice = randInt(0,3);
-  // EvidenceType* evidence = &(*(ghost->possibleEvidence)[evidenceChoice]);
-  EvidenceType* arr3 = *(ghost->possibleEvidence);
-  EvidenceType* evidence = &(arr3[evidenceChoice]);
+  int evidenceChoice = randInt(0,EV_COUNT-1);
+  EvidenceType* evidence = *(ghost->possibleEvidence)+evidenceChoice;
   addEvidence(&ghost->room->evidenceLeft, evidence);
   l_ghostEvidence(*evidence, ghost->room->name);
 }
@@ -39,29 +38,21 @@ void changeRoom(GhostType* ghost){
 
 void* ghostActivity(void* voidGhost) {
   GhostType* ghost = (GhostType*)voidGhost;
-  int madeDecision = C_FALSE;
+  enum GhostDecisions {DO_NOTHING, LEAVE_EVIDENCE, MOVE, DECISION_COUNT};
   while(ghost->boredom < BOREDOM_MAX) {
-    int huntersInRoom = ghost->room->hunterCount > 0;
-    int choice = randInt(0,3);
-    if(huntersInRoom) {
-      ghost->boredom = 0;
-    }
-    else { //if no hunters in room
-      ghost->boredom++;
-    }
-    if(choice == 0 && madeDecision == C_FALSE){//leave evidence
-      leaveEvidence(ghost);
-    } else if (choice == 1 && !huntersInRoom){//leave room
-      changeRoom(ghost);
-      madeDecision = C_FALSE;
-      // sleep(1);
-      continue;
-    } // choice == 2: do nothing
+    int hunterInRoom = ghost->room->hunterCount > 0;
+    int choice;
+    if(hunterInRoom) {
+      choice = randInt(0, DECISION_COUNT-1); // prevent move option
+      ghost->boredom = 0;      
+    } 
     else{
-      //printf("Ghost chilling for 1 second... boredom is %d\n", ghost->boredom);
-    }
-    
-    madeDecision = C_TRUE;
+      choice = randInt(0, DECISION_COUNT);
+      ghost->boredom++;     
+    } 
+    if(choice== LEAVE_EVIDENCE) leaveEvidence(ghost);
+    else if (choice == MOVE) changeRoom(ghost);
+    // else printf("Ghost does nothing...\n");
     // sleep(1);
   }
   l_ghostExit(LOG_BORED);

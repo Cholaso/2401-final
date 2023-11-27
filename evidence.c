@@ -8,6 +8,7 @@ void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence){
     evidenceList->tail->next = toAdd;
     evidenceList->tail = toAdd;
   }
+  evidenceList->size++;
 }
 
 EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device) {
@@ -15,11 +16,12 @@ EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device
   EvidenceType* evidence = NULL;
   for(EvidenceNodeType* it = evidenceList->head; it!=NULL; it=it->next) {
     if(*(it->evidence) == device){
+      evidence = it->evidence;
       if(it == evidenceList->head) evidenceList->head = it->next;
       else prev->next = it->next;
       if(it == evidenceList->tail) evidenceList->tail = prev;
-      evidence = it->evidence;
       free(it);
+      evidenceList->size--;
       break;
     }
     prev = it;

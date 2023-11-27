@@ -48,9 +48,3 @@ void printRoom(RoomType* room) {
   printf(" |\n");
   //to be continues...
 }
-
-void printRoomList(RoomListType* roomList) {
-  for(RoomNodeType* it = roomList->head; it!=NULL; it=it->next) {
-    printRoom(it->room);
-  }
-}

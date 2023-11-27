@@ -1,5 +1,4 @@
 #include "defs.h"
-#include <stdlib.h>
 void initRoomList(RoomListType*roomList) {
   roomList->head = roomList->tail = NULL;
   roomList->size = 0;
@@ -7,6 +6,7 @@ void initRoomList(RoomListType*roomList) {
 
 void initEvidenceList(EvidenceListType *evidenceList) {
   evidenceList->head = evidenceList->tail = NULL;
+  evidenceList->size = 0;
 }
 
 void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], HunterType **hunter) {
@@ -17,6 +17,7 @@ void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListTyp
   (*hunter)->sharedEvidence = sharedEvidence;
   (*hunter)->fear = (*hunter)->boredom = 0;
   (*hunter)->variantEvidence = variantEvidence;
+  sem_init(&(*hunter)->mutex, NULL, 1);
 }
 
 void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, GhostType **ghost) {

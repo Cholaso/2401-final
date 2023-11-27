@@ -8,24 +8,28 @@ int main() {
   char name[MAX_STR];
   GhostType* ghost;
   pthread_t ghostThread;
+  pthread_t hunterThread[NUM_HUNTERS];
 
   // Create the house: You may change this, but it's here for demonstration purposes
   // Note: This code will not compile until you have implemented the house functions and structures
   HouseType house;
   initHouse(&house);
   populateRooms(&house);
-  // printRoomList(&house.rooms);
   for(int i = 0; i<NUM_HUNTERS; i++) {
     askForName(name);
     createHunter(name, &house, i);
-    // printHunter(house.hunters[i]);
   }
   ghost = createGhost(&house);
   
-  pthread_create(&ghostThread,NULL,ghostActivity,(void*)ghost);
-  // hunterActivity((void*)house.hunters[0], (void*)&house);
+  pthread_create(&ghostThread,NULL,ghostActivity,ghost);
+  for(int i = 0; i<NUM_HUNTERS; i++) {
+    pthread_create(&hunterThread[i],NULL,hunterActivity,house.hunters[i]);
+  }
+  for(int i = 0; i<NUM_HUNTERS; i++) {
+    pthread_join(hunterThread[i],NULL);
+  }
   pthread_join(ghostThread, NULL);
-  printRoomList(&house.rooms);
+  printHouse(&house);
   return 0;
 }
 

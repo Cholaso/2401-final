@@ -54,3 +54,15 @@ void populateRooms(HouseType* house) {
     addRoom(&house->rooms, garage);
     addRoom(&house->rooms, utility_room);
 }
+
+void printHouse(HouseType* house) {
+  for(RoomNodeType* it = house->rooms.head; it!=NULL; it=it->next) {
+    printRoom(it->room);
+  }
+  printf("SHARED EVIDENCE LIST: ");
+  for(EvidenceNodeType* it = house->sharedEvidence.head; it!=NULL; it=it->next) {
+    char evidenceStr[MAX_STR];
+    evidenceToString(*it->evidence, evidenceStr);
+    printf("%s, ", evidenceStr);
+  }
+}

@@ -8,12 +8,12 @@
 
 #define MAX_STR         64
 #define MAX_RUNS        50
-#define BOREDOM_MAX     1000
+#define BOREDOM_MAX     100
 #define C_TRUE          1
 #define C_FALSE         0
 #define HUNTER_WAIT     5000
 #define GHOST_WAIT      600
-#define NUM_HUNTERS     0
+#define NUM_HUNTERS     4
 #define FEAR_MAX        10
 #define LOGGING         C_TRUE
 
@@ -47,6 +47,7 @@ struct RoomList {
 struct EvidenceList {
   EvidenceNodeType* head;
   EvidenceNodeType* tail;
+  int size;
 };
 struct Hunter {
   char name[MAX_STR];
@@ -55,13 +56,14 @@ struct Hunter {
   RoomType* room;
   EvidenceType device;
   EvidenceListType* sharedEvidence;
-  EvidenceType (*variantEvidence)[4][3];
+  EvidenceType (*variantEvidence)[GHOST_COUNT][EV_COUNT-1];
+  sem_t mutex;
 };
 struct Ghost {
   int boredom;
   GhostClass ghostVariant;
   RoomType* room;
-  EvidenceType (*possibleEvidence)[3];
+  EvidenceType (*possibleEvidence)[EV_COUNT-1];
 };
 
 struct Room {
@@ -84,7 +86,7 @@ struct House {
   HunterType* hunters[NUM_HUNTERS];
   RoomListType rooms;
   EvidenceListType sharedEvidence;
-  EvidenceType variantEvidence[4][3];
+  EvidenceType variantEvidence[GHOST_COUNT][EV_COUNT-1];
   int hunterCount;
 };
 
@@ -126,20 +128,20 @@ RoomType* createRoom(char* name);
 void addRoom(RoomListType* roomList, RoomType* room);
 void connectRooms(RoomType* first, RoomType* second);
 void printRoom(RoomType* room);
-void printRoomList(RoomListType* roomList);
 
 //hunter functions
 void createHunter(char* name, HouseType* house, EvidenceType device);
 void printHunter(HunterType* hunter);
-void addHunter(HunterType** hunters, HunterType* hunter, int* count);
+void addHunter(HunterType* hunter, RoomType* room);
 void collectEvidence(HunterType* hunter);
-void* hunterActivity(void* voidHunter, void* voidHouse);
-void removeHunter(HunterType* hunter, HunterType** hunters, int* count);
+void* hunterActivity(void* voidHunter);
+void removeHunter(HunterType* hunter);
 void moveHunter(HunterType* hunter);
 void deleteHunter(HunterType* hunter, HouseType* house, enum LoggerDetails reason);
 
 //house functions
 void populateRooms(HouseType* house);
+void printHouse(HouseType* house);
 
 //evidence functions
 void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence);
