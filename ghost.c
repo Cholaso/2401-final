@@ -85,7 +85,7 @@ void changeRoom(GhostType* ghost){
 void* ghostActivity(void* voidGhost) {
   GhostType* ghost = (GhostType*)voidGhost;
   enum GhostDecisions {DO_NOTHING, LEAVE_EVIDENCE, MOVE, DECISION_COUNT};
-  while(C_TRUE){
+  while(ghost->boredom < BOREDOM_MAX){
     usleep(GHOST_WAIT);
     sem_wait(ghost->mutex);
     int hunterInRoom = ghost->room->hunterCount > 0;
@@ -99,7 +99,6 @@ void* ghostActivity(void* voidGhost) {
       choice = randInt(0, DECISION_COUNT);
       ghost->boredom++;     
     } 
-    if(ghost->boredom >= BOREDOM_MAX) break;
     sem_wait(ghost->mutex);
     switch(choice) {
     case LEAVE_EVIDENCE:
@@ -108,6 +107,7 @@ void* ghostActivity(void* voidGhost) {
     case MOVE: 
       changeRoom(ghost);
       break;
+    case DO_NOTHING:
     default:
       break;
     }

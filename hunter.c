@@ -100,24 +100,15 @@ void* hunterActivity(void* voidHunter) {
   enum LoggerDetails reasonForExit = LOG_UNKNOWN;
   enum hunterDecisions {COLLECT_EV, MOVE, REVIEW_EV, DECISION_COUNT};
   int sufficient = C_FALSE;
-  do {
+  while(!sufficient && hunter->fear<FEAR_MAX && hunter->boredom<BOREDOM_MAX) {
     usleep(HUNTER_WAIT);
     sem_wait(hunter->mutex);
-    int ghostPresent = hunter->room->ghost!=NULL;
+    int ghostPresentInRoom = hunter->room->ghost!=NULL;
     sem_post(hunter->mutex);
-    if(ghostPresent) {
+    if(ghostPresentInRoom) {
       hunter->fear++;
       hunter->boredom = 0;
-    } else{
-      hunter->boredom++;
-    }
-    if(hunter->fear >= FEAR_MAX) {
-      reasonForExit = LOG_FEAR;
-      break;
-    } else if(hunter->boredom >= BOREDOM_MAX) {
-      reasonForExit = LOG_BORED;
-      break;
-    }
+    } else hunter->boredom++;
     enum hunterDecisions choice = randInt(0, DECISION_COUNT);
     sem_wait(hunter->mutex);
     switch(choice) {
@@ -128,13 +119,16 @@ void* hunterActivity(void* voidHunter) {
         moveHunter(hunter);     
         break;
       case REVIEW_EV:
-        if((sufficient = reviewEvidence(hunter))) reasonForExit = LOG_EVIDENCE;
+        sufficient = reviewEvidence(hunter);
         break;
       default:
         break;
     }
     sem_post(hunter->mutex);
-  } while(!sufficient);
+  }
+  if(sufficient) reasonForExit = LOG_EVIDENCE;
+  else if(hunter->fear >= FEAR_MAX) reasonForExit = LOG_FEAR;
+  else if(hunter->boredom >= BOREDOM_MAX) reasonForExit = LOG_BORED;
   sem_wait(hunter->mutex);
   removeHunter(hunter);
   l_hunterExit(hunter->name, reasonForExit);
