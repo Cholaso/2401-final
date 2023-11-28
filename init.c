@@ -39,20 +39,23 @@ void initRoom(char *name, RoomType **room) {
   initRoomList(&(*room)->neighbors);
   (*room)->ghost = NULL;
   initEvidenceList(&(*room)->evidenceLeft);
-  for(int i = 0; i<NUM_HUNTERS; i++) (*room)->hunters[i] = NULL;
+  for(int i = 0; i<NUM_HUNTERS; i++) {
+    (*room)->hunters[i] = NULL;
+  }
   (*room)->hunterCount = 0;
 }
 
 void initHouse(HouseType *house) {
   initRoomList(&house->rooms);
   initEvidenceList(&house->sharedEvidence);
+  for(int i = 0; i<NUM_HUNTERS; i++) {
+    house->hunters[i] = NULL;
+  }
   house->hunterCount = 0;
-  for(int i = 0; i<NUM_HUNTERS; i++) house->hunters[i] = NULL;
-  EvidenceType init[4][3] = {{EMF,TEMPERATURE,FINGERPRINTS},{EMF,TEMPERATURE,SOUND},{EMF,FINGERPRINTS,SOUND},{TEMPERATURE,FINGERPRINTS,SOUND}};
-  house->variantEvidence[0][0] = EMF;
-  for(int i = 0; i<4; i++){
-    for(int j = 0; j < 3; j++){
-      house->variantEvidence[i][j] = init[i][j];
+  EvidenceType variantCombinations[GHOST_COUNT][EV_COUNT-1] = {{EMF,TEMPERATURE,FINGERPRINTS},{EMF,TEMPERATURE,SOUND},{EMF,FINGERPRINTS,SOUND},{TEMPERATURE,FINGERPRINTS,SOUND}};
+  for(int i = 0; i<GHOST_COUNT; i++){
+    for(int j = 0; j < EV_COUNT-1; j++){
+      house->variantEvidence[i][j] = variantCombinations[i][j];
     }
   }
   sem_init(&house->mutex, 0, 1);

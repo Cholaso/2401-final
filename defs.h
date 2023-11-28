@@ -19,6 +19,8 @@
 #define FEAR_MAX        10
 #define LOGGING         C_TRUE
 
+#define VAN_ROOM_POS 0
+
 typedef enum EvidenceType EvidenceType;
 typedef enum GhostClass GhostClass;
 // our definitions
@@ -102,14 +104,14 @@ struct args{
   HouseType* house;
 };
 
-// Helper Utilies
+// Helper Utilies: util.c
 int randInt(int,int);        // Pseudo-random number generator function
 float randFloat(float, float);  // Pseudo-random float generator function
 enum GhostClass randomGhost();  // Return a randomly selected a ghost type
 void ghostToString(enum GhostClass, char*); // Convert a ghost type to a string, stored in output paremeter
 void evidenceToString(enum EvidenceType, char*); // Convert an evidence type to a string, stored in output parameter
 
-// Logging Utilities
+// Logging Utilities: logger.c
 void l_hunterInit(char* name, enum EvidenceType equipment);
 void l_hunterMove(char* name, char* room);
 void l_hunterReview(char* name, enum LoggerDetails reviewResult);
@@ -120,24 +122,24 @@ void l_ghostMove(char* room);
 void l_ghostEvidence(enum EvidenceType evidence, char* room);
  void l_ghostExit(enum LoggerDetails reason);
 
-//init functions
+//init functions: init.c
 void initRoomList(RoomListType* roomList);
 void initEvidenceList(EvidenceListType* evidenceList);
-void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], sem_t* mutex, int* sufficientEvidenceFound, HunterType **hunter);
-void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, sem_t *mutex, int* sufficientEvidenceFound, GhostType **ghost);
+void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[GHOST_COUNT][EV_COUNT-1], sem_t* mutex, int* sufficientEvidenceFound, HunterType **hunter);
+void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[EV_COUNT-1], RoomType *room, sem_t *mutex, int* sufficientEvidenceFound, GhostType **ghost);
 void initRoom(char* name, RoomType** room);
 void initRoomNode(RoomType* room, RoomNodeType* next, RoomNodeType* this);
 void initEvidenceNode( EvidenceType* evidence, EvidenceNodeType* next, EvidenceNodeType* this);
 void initHouse(HouseType* house);
 
-// room functions
+// room functions: room.c
 RoomType* createRoom(char* name);
 void addRoom(RoomListType* roomList, RoomType* room);
 void connectRooms(RoomType* first, RoomType* second);
 void printRoom(RoomType* room);
 void cleanupRoomList(RoomListType* roomList);
 
-//hunter functions
+//hunter functions: hunter.c
 void createHunter(char* name, HouseType* house, EvidenceType device);
 void printHunter(HunterType* hunter);
 void addHunter(HunterType* hunter, RoomType* room);
@@ -147,23 +149,24 @@ void removeHunter(HunterType* hunter);
 void moveHunter(HunterType* hunter);
 void deleteHunter(HunterType* hunter, HouseType* house, enum LoggerDetails reason);
 
-//house functions
+//house functions: house.c
 void populateRooms(HouseType* house);
 void printHouse(HouseType* house);
 void cleanupHouse(HouseType* house, GhostType* ghost);
 
-//evidence functions
+//evidence functions: evidence.c
 void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence);
 EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device);
 void cleanupEvidenceList(EvidenceListType* evidenceList);
 
-//main functions
+//main functions: main.c
 void askForName(char* name);
 void printGameResults(HouseType* house, GhostType* ghost);
+GhostClass determineGhost(HouseType* house);
 
-// ghost functions
+// ghost functions: ghost.c
 GhostType* createGhost(HouseType* house);
 void leaveEvidence(GhostType* ghost);
 void changeRoom(GhostType* ghost);
 void* ghostActivity(void* ghost);
-void deleteGhost(GhostType* ghost);
+void removeGhost(GhostType* ghost);

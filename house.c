@@ -74,6 +74,7 @@ void printHouse(HouseType* house) {
 /*
     Cleans up our house and all data within, freeing all dynamic memory in our program.
     in/out: house - our house
+    in/out: ghost - our ghost
 */
 void cleanupHouse(HouseType* house, GhostType* ghost) {
   for(int i = 0; i<house->hunterCount; i++) {

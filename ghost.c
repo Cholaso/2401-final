@@ -8,13 +8,13 @@
 */
 GhostType* createGhost(HouseType* house) {
   GhostType* ghost;
-  int roomPos = randInt(1, house->rooms.size);
+  int roomPos = randInt(VAN_ROOM_POS+1, house->rooms.size);
   RoomNodeType* current = house->rooms.head;
   for(int i = 0; i<roomPos; i++) {
     current = current->next;
   }
   GhostClass variant = randomGhost();
-  EvidenceType (*possibleEvidence)[3] = &house->variantEvidence[variant];
+  EvidenceType (*possibleEvidence)[EV_COUNT-1] = &house->variantEvidence[variant];
   initGhost(variant, possibleEvidence, current->room, &house->mutex, &house->sufficientEvidenceFound, &ghost);
   current->room->ghost = ghost;
   l_ghostInit(ghost->ghostVariant, current->room->name);
@@ -69,28 +69,30 @@ void* ghostActivity(void* voidGhost) {
       ghost->boredom++;     
     } 
     if(sufficientEvidenceFound==C_TRUE || ghost->boredom >= BOREDOM_MAX) break;
-    if(choice== LEAVE_EVIDENCE) {
-      sem_wait(ghost->mutex);
-      leaveEvidence(ghost);     
-      sem_post(ghost->mutex);
+    sem_wait(ghost->mutex);
+    switch(choice) {
+    case LEAVE_EVIDENCE:
+      leaveEvidence(ghost);
+      break;
+    case MOVE: 
+      changeRoom(ghost);
+      break;
+    default:
+      break;
     }
-    else if (choice == MOVE) {
-      sem_wait(ghost->mutex);
-      changeRoom(ghost);     
-      sem_post(ghost->mutex);
-    }
+    sem_post(ghost->mutex);
   }
-  deleteGhost(ghost);
+  sem_wait(ghost->mutex);
+  removeGhost(ghost);
+  sem_post(ghost->mutex);
   return NULL;
 }
 /* 
-    Deletes our ghost from the house.
+    Removes our ghost from the house.
     in/out: ghost - our ghost
 */
-void deleteGhost(GhostType* ghost) {
-  sem_wait(ghost->mutex);
+void removeGhost(GhostType* ghost) {
   ghost->room->ghost = NULL;
-  sem_post(ghost->mutex);
   ghost->room = NULL;
   if(ghost->boredom >= BOREDOM_MAX) l_ghostExit(LOG_BORED);
 }

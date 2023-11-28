@@ -3,7 +3,6 @@
 #include "defs.h"
 
 int main() {
-  // Initialize the random number generator
   srand(time(NULL));
   char name[MAX_STR];
   HouseType house;
@@ -42,7 +41,7 @@ void askForName(char* name) {
 }
 
 GhostClass determineGhost(HouseType* house) {
-  // we sort the array by enum order
+  // we sort the shared evidence by enum order using counting sort
   EvidenceType sharedEv[EV_COUNT];
   EvidenceType sortedEv[EV_COUNT-1];
   int j = 0;
@@ -55,14 +54,11 @@ GhostClass determineGhost(HouseType* house) {
   for(int i = 0; i<EV_COUNT; i++) {
     if(sharedEv[i] != 0) sortedEv[j++] = i;
   }
-  // return the ghost type
+  // return the ghost type by finding a matching array in house's combinations
   int found = C_FALSE;
-  for(int i = 0; i < 4; i++){
-    for(int j = 0; j<3; j++){
-      if(house->variantEvidence[i][j] != sortedEv[j]){
-        found = C_FALSE;
-        break;
-      }
+  for(int i = 0; i < GHOST_COUNT; i++){
+    for(int j = 0; j < EV_COUNT; j++){
+      if(house->variantEvidence[i][j] != sortedEv[j]) break;
       found = C_TRUE;
     }
     if(found)return i;
@@ -74,7 +70,7 @@ void printGameResults(HouseType* house, GhostType* ghost) {
   int huntersThatLeft = 0;
   char buffer[MAX_STR];
   printf("--------------------------------------------\n");
-  for(int i = 0; i<house->hunterCount; i++) {
+  for(int i = 0; i < house->hunterCount; i++) {
     HunterType *hunter = house->hunters[i];
     if(hunter->boredom >= BOREDOM_MAX) {
       printf("[GAME RESULT]: [%s] has exited due to [BOREDOM].\n", hunter->name);
@@ -94,9 +90,9 @@ void printGameResults(HouseType* house, GhostType* ghost) {
     printf("%s", buffer);
   }
   if(huntersThatLeft == house->hunterCount) {
-    printf("[GAME RESULT]: All hunters left, ghost wins.\n");
+    printf("[GAME RESULT]: All hunters left. Ghost wins.\n");
   } else {
     ghostToString(determineGhost(house), buffer);
-    printf("[GAME RESULT]: Hunters win. Hunters identified ghost as \"%s\".\n", buffer);
+    printf("[GAME RESULT]: Hunters identified ghost as \"%s\". Hunters win.\n", buffer);
   }
 }

@@ -57,7 +57,6 @@ void moveHunter(HunterType* hunter){
   for(int i = 0; i<roomToChoose; i++){
     currentRoom = currentRoom->next;
   }
-  //add hunter
   addHunter(hunter, currentRoom->room);
   l_hunterMove(hunter->name, currentRoom->room->name);
 }
@@ -99,7 +98,7 @@ void* hunterActivity(void* voidHunter) {
     } else{
       hunter->boredom++;
     }
-    if(sufficientEvidenceFound==C_TRUE) {
+    if(sufficientEvidenceFound) {
       reasonForExit = LOG_EVIDENCE;
       break;
     } else if(hunter->fear >= FEAR_MAX) {
@@ -110,21 +109,21 @@ void* hunterActivity(void* voidHunter) {
       break;
     }
     enum hunterDecisions choice = randInt(0, DECISION_COUNT);
-    if(choice == COLLECT_EV) {
-      sem_wait(hunter->mutex);
-      collectEvidence(hunter);
-      sem_post(hunter->mutex);
+    sem_wait(hunter->mutex);
+    switch(choice) {
+      case COLLECT_EV:
+        collectEvidence(hunter);
+        break;
+      case MOVE:
+        moveHunter(hunter);     
+        break;
+      case REVIEW_EV:
+        reviewEvidence(hunter);
+        break;
+      default:
+        break;
     }
-    else if (choice == MOVE) { 
-      sem_wait(hunter->mutex);
-      moveHunter(hunter);     
-      sem_post(hunter->mutex);
-    }
-    else if (choice==REVIEW_EV) {
-      sem_wait(hunter->mutex);
-      reviewEvidence(hunter);
-      sem_post(hunter->mutex);
-    }
+    sem_post(hunter->mutex);
   }
   sem_wait(hunter->mutex);
   removeHunter(hunter);
