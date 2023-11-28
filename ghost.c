@@ -9,17 +9,15 @@
     in: variantEvidences - a pointer to array of possible evidences the type can leave behind
     in: room - the room that it starts in
     in: mutex - the mutex that the ghost thread will obey
-    in: sufficientEvidenceFound - a flag that the ghost checks to see if the hunters have won or not (meaning if the game is over or not)
     in/out ghost - the ghost we are initializing
 */
-void initGhost(GhostClass variant, EvidenceType (*variantEvidences)[EV_COUNT-1], RoomType *room, sem_t *mutex, int* sufficientEvidenceFound, GhostType **ghost) {
+void initGhost(GhostClass variant, EvidenceType (*variantEvidences)[EV_COUNT-1], RoomType *room, sem_t *mutex, GhostType **ghost) {
   *ghost = (GhostType*) malloc(sizeof(GhostType));
   (*ghost)->ghostVariant = variant;
   (*ghost)->room = room;
   (*ghost)->boredom = 0;
   (*ghost)->possibleEvidences = variantEvidences;
   (*ghost)->mutex = mutex;
-  (*ghost)->sufficientEvidenceFound = sufficientEvidenceFound;
 }
 
 /* 
@@ -37,7 +35,7 @@ GhostType* createGhost(HouseType* house) {
   }
   GhostClass variant = randomGhost();
   EvidenceType (*possibleEvidence)[EV_COUNT-1] = &house->variantCombinations[variant];
-  initGhost(variant, possibleEvidence, current->room, &house->mutex, &house->sufficientEvidenceFound, &ghost);
+  initGhost(variant, possibleEvidence, current->room, &house->mutex, &ghost);
   current->room->ghost = ghost;
   l_ghostInit(ghost->ghostVariant, current->room->name);
   return ghost;
@@ -50,7 +48,7 @@ GhostType* createGhost(HouseType* house) {
 void removeGhost(GhostType* ghost) {
   ghost->room->ghost = NULL;
   ghost->room = NULL;
-  if(ghost->boredom >= BOREDOM_MAX) l_ghostExit(LOG_BORED);
+  l_ghostExit(LOG_BORED);
 }
 
 /* 
@@ -91,7 +89,6 @@ void* ghostActivity(void* voidGhost) {
     usleep(GHOST_WAIT);
     sem_wait(ghost->mutex);
     int hunterInRoom = ghost->room->hunterCount > 0;
-    int sufficientEvidenceFound = *ghost->sufficientEvidenceFound;
     sem_post(ghost->mutex);
     int choice;
     if(hunterInRoom) {
@@ -102,7 +99,7 @@ void* ghostActivity(void* voidGhost) {
       choice = randInt(0, DECISION_COUNT);
       ghost->boredom++;     
     } 
-    if(sufficientEvidenceFound==C_TRUE || ghost->boredom >= BOREDOM_MAX) break;
+    if(ghost->boredom >= BOREDOM_MAX) break;
     sem_wait(ghost->mutex);
     switch(choice) {
     case LEAVE_EVIDENCE:

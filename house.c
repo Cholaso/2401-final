@@ -21,7 +21,6 @@ void initHouse(HouseType *house) {
     }
   }
   sem_init(&house->mutex, 0, 1);
-  house->sufficientEvidenceFound = C_FALSE;
 }
 
 /*

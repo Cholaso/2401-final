@@ -10,9 +10,8 @@
     in: sharedEvidence - a pointer to a list of shared evidence all hunters can see and add to
     in: variantCombinations - a pointer to all possible combinations of evidences that a ghost can leave behind
     in: mutex - the mutex that the hunter thread will obey
-    in: sufficientEvidenceFound - a flag that the hunters check and can update to indicate if they can determine the ghost type (and end the game)
 */
-void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantCombinations)[4][3], sem_t* mutex, int* sufficientEvidenceFound, HunterType **hunter) {
+void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantCombinations)[4][3], sem_t* mutex, HunterType **hunter) {
   *hunter = (HunterType*) malloc(sizeof(HunterType));
   strcpy((*hunter)->name, name);
   (*hunter)->room = room;
@@ -21,7 +20,6 @@ void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListTyp
   (*hunter)->fear = (*hunter)->boredom = 0;
   (*hunter)->variantCombinations = variantCombinations;
   (*hunter)->mutex = mutex;
-  (*hunter)->sufficientEvidenceFound = sufficientEvidenceFound;
 }
 
 /*
@@ -33,7 +31,7 @@ void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListTyp
 void createHunter(char *name, HouseType *house, EvidenceType device) {
   HunterType* hunter;
   RoomType* van = house->rooms.head->room;
-  initHunter(name, van, device, &house->sharedEvidence,&house->variantCombinations, &house->mutex, &house->sufficientEvidenceFound, &hunter);
+  initHunter(name, van, device, &house->sharedEvidence,&house->variantCombinations, &house->mutex, &hunter);
   addHunter(hunter, van);
   house->hunters[(house->hunterCount)++] = hunter;
   l_hunterInit(name, device);
@@ -88,10 +86,10 @@ void moveHunter(HunterType* hunter){
 
     in/out: hunter - hunter reviewing evidence
 */
-void reviewEvidence(HunterType* hunter) {
-  int sufficient = hunter->sharedEvidence->size >= 3;
+int reviewEvidence(HunterType* hunter) {
+  int sufficient = hunter->sharedEvidence->size >= EV_COUNT-1;
   l_hunterReview(hunter->name, sufficient ? LOG_SUFFICIENT : LOG_INSUFFICIENT);
-  if(sufficient) *hunter->sufficientEvidenceFound = C_TRUE;
+  return sufficient;
 }
 /*
     Main control flow for hunter threads. Hunters make random descisions that are handled here. 
@@ -101,10 +99,10 @@ void* hunterActivity(void* voidHunter) {
   HunterType* hunter = (HunterType*) voidHunter;
   enum LoggerDetails reasonForExit = LOG_UNKNOWN;
   enum hunterDecisions {COLLECT_EV, MOVE, REVIEW_EV, DECISION_COUNT};
-  while(C_TRUE){
+  int sufficient = C_FALSE;
+  do {
     usleep(HUNTER_WAIT);
     sem_wait(hunter->mutex);
-    int sufficientEvidenceFound = *hunter->sufficientEvidenceFound;
     int ghostPresent = hunter->room->ghost!=NULL;
     sem_post(hunter->mutex);
     if(ghostPresent) {
@@ -113,10 +111,7 @@ void* hunterActivity(void* voidHunter) {
     } else{
       hunter->boredom++;
     }
-    if(sufficientEvidenceFound) {
-      reasonForExit = LOG_EVIDENCE;
-      break;
-    } else if(hunter->fear >= FEAR_MAX) {
+    if(hunter->fear >= FEAR_MAX) {
       reasonForExit = LOG_FEAR;
       break;
     } else if(hunter->boredom >= BOREDOM_MAX) {
@@ -133,13 +128,13 @@ void* hunterActivity(void* voidHunter) {
         moveHunter(hunter);     
         break;
       case REVIEW_EV:
-        reviewEvidence(hunter);
+        if((sufficient = reviewEvidence(hunter))) reasonForExit = LOG_EVIDENCE;
         break;
       default:
         break;
     }
     sem_post(hunter->mutex);
-  }
+  } while(!sufficient);
   sem_wait(hunter->mutex);
   removeHunter(hunter);
   l_hunterExit(hunter->name, reasonForExit);
