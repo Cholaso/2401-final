@@ -45,7 +45,7 @@ void printRoom(RoomType* room) {
   printf(" | Evidence: ");
   for(EvidenceNodeType* it = room->evidenceLeft.head; it!=NULL; it=it->next) {
     evidenceToString(*(it->evidence), evidence);
-    printf("%s,", evidence, *(it->evidence));
+    printf("%s,", evidence);
   }
   printf(" |\n");
   //to be continues...

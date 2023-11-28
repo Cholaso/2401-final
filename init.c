@@ -1,7 +1,6 @@
 //Nicholas O'Neil : Jazeel Abdul-Jabbar
 //101200961       : 101253438
 #include "defs.h"
-#include <semaphore.h>
 void initRoomList(RoomListType*roomList) {
   roomList->head = roomList->tail = NULL;
   roomList->size = 0;
@@ -56,6 +55,6 @@ void initHouse(HouseType *house) {
       house->variantEvidence[i][j] = init[i][j];
     }
   }
-  sem_init(&house->mutex, NULL, 1);
+  sem_init(&house->mutex, 0, 1);
   house->sufficientEvidenceFound = C_FALSE;
 }

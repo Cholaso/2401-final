@@ -13,8 +13,8 @@
 #define BOREDOM_MAX     100
 #define C_TRUE          1
 #define C_FALSE         0
-#define HUNTER_WAIT     5000
-#define GHOST_WAIT      600
+#define HUNTER_WAIT     5000 // 5000
+#define GHOST_WAIT      600 // 600
 #define NUM_HUNTERS     4
 #define FEAR_MAX        10
 #define LOGGING         C_TRUE
@@ -150,7 +150,7 @@ void deleteHunter(HunterType* hunter, HouseType* house, enum LoggerDetails reaso
 //house functions
 void populateRooms(HouseType* house);
 void printHouse(HouseType* house);
-void cleanupHouse(HouseType* house);
+void cleanupHouse(HouseType* house, GhostType* ghost);
 
 //evidence functions
 void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence);
@@ -159,6 +159,7 @@ void cleanupEvidenceList(EvidenceListType* evidenceList);
 
 //main functions
 void askForName(char* name);
+void printGameResults(HouseType* house, GhostType* ghost);
 
 // ghost functions
 GhostType* createGhost(HouseType* house);

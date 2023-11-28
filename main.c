@@ -1,20 +1,14 @@
 //Nicholas O'Neil : Jazeel Abdul-Jabbar
 //101200961       : 101253438
 #include "defs.h"
-#include <pthread.h>
 
 int main() {
   // Initialize the random number generator
   srand(time(NULL));
-  
   char name[MAX_STR];
-  GhostType* ghost;
-  pthread_t ghostThread;
-  pthread_t hunterThread[NUM_HUNTERS];
-
-  // Create the house: You may change this, but it's here for demonstration purposes
-  // Note: This code will not compile until you have implemented the house functions and structures
   HouseType house;
+  GhostType* ghost;
+  pthread_t ghostThread, hunterThread[NUM_HUNTERS];
   initHouse(&house);
   populateRooms(&house);
   for(int i = 0; i<NUM_HUNTERS; i++) {
@@ -22,7 +16,6 @@ int main() {
     createHunter(name, &house, i%EV_COUNT);
   }
   ghost = createGhost(&house);
-  
   pthread_create(&ghostThread,NULL,ghostActivity,ghost);
   for(int i = 0; i<NUM_HUNTERS; i++) {
     pthread_create(&hunterThread[i],NULL,hunterActivity,house.hunters[i]);
@@ -31,15 +24,8 @@ int main() {
     pthread_join(hunterThread[i],NULL);
   }
   pthread_join(ghostThread, NULL);
-  // printHouse(&house);
-  if(house.sufficientEvidenceFound == C_TRUE) {
-    for(int i = 0; i<GHOST_COUNT; i++) {
-      for(int j = 0; i<EV_COUNT-1; i++) {
-        if
-      }
-    }
-  }
-  cleanupHouse(&house);
+  printGameResults(&house, ghost);
+  cleanupHouse(&house, ghost);
   return 0;
 }
 
@@ -55,22 +41,62 @@ void askForName(char* name) {
   name[strcspn(name, "\n")] = '\0'; // set the value of room[index of "\n"] to 0
 }
 
-void printGameResults(HouseType* house) {
+GhostClass determineGhost(HouseType* house) {
+  // we sort the array by enum order
+  EvidenceType sharedEv[EV_COUNT];
+  EvidenceType sortedEv[EV_COUNT-1];
+  int j = 0;
+  for(int i = 0; i<EV_COUNT; i++) {
+    sharedEv[i] = 0;
+  }
+  for(EvidenceNodeType* it = house->sharedEvidence.head; it!=NULL; it=it->next){
+    sharedEv[*it->evidence]++;
+  }
+  for(int i = 0; i<EV_COUNT; i++) {
+    if(sharedEv[i] != 0) sortedEv[j++] = i;
+  }
+  // return the ghost type
+  int found = C_FALSE;
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j<3; j++){
+      if(house->variantEvidence[i][j] != sortedEv[j]){
+        found = C_FALSE;
+        break;
+      }
+      found = C_TRUE;
+    }
+    if(found)return i;
+  }
+  return GH_UNKNOWN;
+}
+
+void printGameResults(HouseType* house, GhostType* ghost) {
   int huntersThatLeft = 0;
-  printf("[GAME RESULTS]: \n");
-  printf("Hunters that have exited: \n");
+  char buffer[MAX_STR];
+  printf("--------------------------------------------\n");
   for(int i = 0; i<house->hunterCount; i++) {
     HunterType *hunter = house->hunters[i];
     if(hunter->boredom >= BOREDOM_MAX) {
-      printf("[%s] has exited due to [BOREDOM].\n", hunter->name);
+      printf("[GAME RESULT]: [%s] has exited due to [BOREDOM].\n", hunter->name);
       huntersThatLeft++;
     }
     else if(hunter->fear >= FEAR_MAX) {
-      printf("[%s] has exited due to [FEAR].\n",hunter->name);
+      printf("[GAME RESULT]: [%s] has exited due to [FEAR].\n",hunter->name);
       huntersThatLeft++;
     } 
   }
+  ghostToString(ghost->ghostVariant,buffer);
+  printf("[GAME RESULT]: Ghost type was %s.\n", buffer);
+  printf("[GAME RESULT]: Shared evidence that hunters collected: ");
+  for(EvidenceNodeType* it = house->sharedEvidence.head; it!=NULL; it=it->next){
+    evidenceToString(*it->evidence, buffer);
+    strcat(buffer, it->next == NULL ? "\n" : ", ");
+    printf("%s", buffer);
+  }
   if(huntersThatLeft == house->hunterCount) {
     printf("[GAME RESULT]: All hunters left, ghost wins.\n");
+  } else {
+    ghostToString(determineGhost(house), buffer);
+    printf("[GAME RESULT]: Hunters win. Hunters identified ghost as \"%s\".\n", buffer);
   }
 }

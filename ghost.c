@@ -1,8 +1,6 @@
 //Nicholas O'Neil : Jazeel Abdul-Jabbar
 //101200961       : 101253438
 #include "defs.h"
-#include <semaphore.h>
-#include <time.h>
 
 /* 
     Creates a ghost and adds it to a random room in our house
@@ -55,8 +53,13 @@ void changeRoom(GhostType* ghost){
 void* ghostActivity(void* voidGhost) {
   GhostType* ghost = (GhostType*)voidGhost;
   enum GhostDecisions {DO_NOTHING, LEAVE_EVIDENCE, MOVE, DECISION_COUNT};
-  while(ghost->boredom < BOREDOM_MAX && *ghost->sufficientEvidenceFound == C_FALSE) {
+  do {
+    usleep(GHOST_WAIT);
+    sem_wait(ghost->mutex);
     int hunterInRoom = ghost->room->hunterCount > 0;
+    int sufficientEvidenceFound = *ghost->sufficientEvidenceFound;
+    sem_post(ghost->mutex);
+    if(sufficientEvidenceFound==C_TRUE) break;
     int choice;
     if(hunterInRoom) {
       choice = randInt(0, DECISION_COUNT-1); // prevent move option
@@ -76,14 +79,13 @@ void* ghostActivity(void* voidGhost) {
       changeRoom(ghost);     
       sem_post(ghost->mutex);
     }
-    // else printf("Ghost does nothing...\n");
-    usleep(GHOST_WAIT*1000);
   }
+  while(ghost->boredom < BOREDOM_MAX);
   deleteGhost(ghost);
   return NULL;
 }
 /* 
-    Deletes our ghost and frees all of it's dynamic memory.
+    Deletes our ghost from the house.
     in/out: ghost - our ghost
 */
 void deleteGhost(GhostType* ghost) {
@@ -92,6 +94,4 @@ void deleteGhost(GhostType* ghost) {
   sem_post(ghost->mutex);
   ghost->room = NULL;
   if(ghost->boredom >= BOREDOM_MAX) l_ghostExit(LOG_BORED);
-  else if (*ghost->sufficientEvidenceFound == C_TRUE) l_ghostExit(LOG_EVIDENCE);
-  free(ghost);
 }
