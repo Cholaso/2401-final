@@ -87,18 +87,27 @@ void* hunterActivity(void* voidHunter) {
   HunterType* hunter = (HunterType*) voidHunter;
   enum LoggerDetails reasonForExit = LOG_UNKNOWN;
   enum hunterDecisions {COLLECT_EV, MOVE, REVIEW_EV, DECISION_COUNT};
-  do {
+  while(C_TRUE){
     usleep(HUNTER_WAIT);
     sem_wait(hunter->mutex);
     int sufficientEvidenceFound = *hunter->sufficientEvidenceFound;
     int ghostPresent = hunter->room->ghost!=NULL;
     sem_post(hunter->mutex);
-    if(sufficientEvidenceFound==C_TRUE) break;
     if(ghostPresent) {
       hunter->fear++;
       hunter->boredom = 0;
     } else{
       hunter->boredom++;
+    }
+    if(sufficientEvidenceFound==C_TRUE) {
+      reasonForExit = LOG_EVIDENCE;
+      break;
+    } else if(hunter->fear >= FEAR_MAX) {
+      reasonForExit = LOG_FEAR;
+      break;
+    } else if(hunter->boredom >= BOREDOM_MAX) {
+      reasonForExit = LOG_BORED;
+      break;
     }
     enum hunterDecisions choice = randInt(0, DECISION_COUNT);
     if(choice == COLLECT_EV) {
@@ -116,10 +125,7 @@ void* hunterActivity(void* voidHunter) {
       reviewEvidence(hunter);
       sem_post(hunter->mutex);
     }
-  } while(hunter->boredom < BOREDOM_MAX && hunter->fear < FEAR_MAX);
-  if(hunter->fear >= FEAR_MAX) reasonForExit = LOG_FEAR; 
-  else if (hunter->boredom >= BOREDOM_MAX) reasonForExit = LOG_BORED;
-  else reasonForExit = LOG_EVIDENCE;
+  }
   sem_wait(hunter->mutex);
   removeHunter(hunter);
   l_hunterExit(hunter->name, reasonForExit);
@@ -132,10 +138,7 @@ void* hunterActivity(void* voidHunter) {
 */
 void collectEvidence(HunterType* hunter){
   EvidenceType* evidence = removeEvidence(&hunter->room->evidenceLeft, hunter->device);
-  if(evidence==NULL) {
-    printf("%s tried to collect evidence but failed.\n",hunter->name);
-    return; // no evidence found for hunter to collect
-  }
+  if(evidence==NULL) return; // no evidence found for hunter to collect
   for(EvidenceNodeType* it = hunter->sharedEvidence->head; it!=NULL; it=it->next) {
     if(it->evidence == evidence) return; // it is already collected
   }

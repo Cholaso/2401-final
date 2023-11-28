@@ -53,13 +53,12 @@ void changeRoom(GhostType* ghost){
 void* ghostActivity(void* voidGhost) {
   GhostType* ghost = (GhostType*)voidGhost;
   enum GhostDecisions {DO_NOTHING, LEAVE_EVIDENCE, MOVE, DECISION_COUNT};
-  do {
+  while(C_TRUE){
     usleep(GHOST_WAIT);
     sem_wait(ghost->mutex);
     int hunterInRoom = ghost->room->hunterCount > 0;
     int sufficientEvidenceFound = *ghost->sufficientEvidenceFound;
     sem_post(ghost->mutex);
-    if(sufficientEvidenceFound==C_TRUE) break;
     int choice;
     if(hunterInRoom) {
       choice = randInt(0, DECISION_COUNT-1); // prevent move option
@@ -69,6 +68,7 @@ void* ghostActivity(void* voidGhost) {
       choice = randInt(0, DECISION_COUNT);
       ghost->boredom++;     
     } 
+    if(sufficientEvidenceFound==C_TRUE || ghost->boredom >= BOREDOM_MAX) break;
     if(choice== LEAVE_EVIDENCE) {
       sem_wait(ghost->mutex);
       leaveEvidence(ghost);     
@@ -80,7 +80,6 @@ void* ghostActivity(void* voidGhost) {
       sem_post(ghost->mutex);
     }
   }
-  while(ghost->boredom < BOREDOM_MAX);
   deleteGhost(ghost);
   return NULL;
 }
