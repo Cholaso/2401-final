@@ -2,15 +2,19 @@
 //101200961       : 101253438
 #include "defs.h"
 
+/*
+    initializes an evidence list's head and tail to null and sets its size to 0
+    out:  evidenceList: the evidence list we want to initialize
+*/
 void initEvidenceList(EvidenceListType *evidenceList) {
   evidenceList->head = evidenceList->tail = NULL;
   evidenceList->size = 0;
 }
 
 /* 
-    Adds evidence to the evidence list
-    in/out: evidenceList - the list that we store the evidence in
-    out: evidence - the evidence we are adding
+    adds evidence to the evidence list by allocating a node on the heap to point to it, and appending the node to the list
+    in/out: evidenceList - the list to store the evidence in
+    in: evidence - the evidence we are adding
 */
 void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence){
   EvidenceNodeType* toAdd = (EvidenceNodeType*) malloc(sizeof(EvidenceNodeType));
@@ -25,9 +29,11 @@ void addEvidence(EvidenceListType *evidenceList, EvidenceType *evidence){
 }
 
 /* 
-    removes first instance of device readable evidence from the evidence list
+    removes and deallocates from an evidence list the first instance of a specific evidence that matches device.
     in/out: evidenceList - the list that we store the evidence in
     in: device - the device we are using to find evidence
+    
+    returns: the evidence that was removed OR NULL if nothing was removed
 */
 EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device) {
   EvidenceNodeType* prev = NULL;
@@ -46,8 +52,9 @@ EvidenceType* removeEvidence(EvidenceListType* evidenceList, EvidenceType device
   }
   return evidence;
 }
+
 /* 
-    Cleans all dynamically allocated memory from the evidence list
+    Cleans all dynamically allocated nodes from the evidence list
     in/out: evidenceList - the list that we are cleaning
 */
 void cleanupEvidenceList(EvidenceListType* evidenceList) {

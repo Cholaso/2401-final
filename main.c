@@ -27,21 +27,30 @@ int main() {
   cleanupHouse(&house, ghost);
   return 0;
 }
-
+/*
+    prompts to user to enter the name of a hunter.
+    in/out name: the name that a hunter will have
+ */
 void askForName(char* name) {
   char c;
   do{
-    printf("Please Select a name for hunter: ");
+    printf("Please select a name for hunter: ");
     fgets(name, MAX_STR, stdin);
-  } while(strcspn(name,"\n")==0);
-  if(strcspn(name, "\n") >= MAX_STR-1){
-    while((c = getchar()) != '\n');
+  } while(strcspn(name,"\n")==0); // don't allow user to enter nothing
+  if(strcspn(name, "\n") >= MAX_STR-1){ // if no "\n" found in the string
+    while((c = getchar()) != '\n');  // we have an overflow, clear buffer
   }
-  name[strcspn(name, "\n")] = '\0'; // set the value of room[index of "\n"] to 0
+  name[strcspn(name, "\n")] = '\0'; // remove the newline in the string
 }
 
+/*
+    looks at the shared evidence of the house and determines which ghost it is
+    in: house - the house that contains the shared evidence
+    
+    returns: the type of ghost that was determined
+ */
 GhostClass determineGhost(HouseType* house) {
-  // we sort the shared evidence by enum order using counting sort
+  // we first sort the shared evidence by enum order using counting sort
   EvidenceType sharedEv[EV_COUNT];
   EvidenceType sortedEv[EV_COUNT-1];
   int j = 0;
@@ -54,11 +63,11 @@ GhostClass determineGhost(HouseType* house) {
   for(int i = 0; i<EV_COUNT; i++) {
     if(sharedEv[i] != 0) sortedEv[j++] = i;
   }
-  // return the ghost type by finding a matching array in house's combinations
+  // then find the ghost type by finding a matching sorted array in house
   int found = C_FALSE;
   for(int i = 0; i < GHOST_COUNT; i++){
     for(int j = 0; j < EV_COUNT-1; j++){
-      if(house->variantEvidence[i][j] != sortedEv[j]){
+      if(house->variantCombinations[i][j] != sortedEv[j]){
         found = C_FALSE;
         break;       
       }
@@ -69,6 +78,12 @@ GhostClass determineGhost(HouseType* house) {
   return GH_UNKNOWN;
 }
 
+/*
+   prints the outcome of the game by showing which hunters left, what evidence the hunters collected, and whether they won or not.
+
+  in: house - the house which contains the hunters and shared evidence
+  in: ghost - the ghost, used to reveal what type it was
+ */
 void printGameResults(HouseType* house, GhostType* ghost) {
   int huntersThatLeft = 0;
   char buffer[MAX_STR];

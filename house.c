@@ -2,6 +2,11 @@
 //101200961       : 101253438
 #include "defs.h"
 
+/*
+   initializes the house and all its necessary fields such as: an array of hunters, all evidence combinations for ghost variants, and the semaphore and 'sufficient evidence flag' that the ghost and hunter threads look at
+   
+   in/out: house - the house we are initializing
+*/
 void initHouse(HouseType *house) {
   initRoomList(&house->rooms);
   initEvidenceList(&house->sharedEvidence);
@@ -12,7 +17,7 @@ void initHouse(HouseType *house) {
   EvidenceType variantCombinations[GHOST_COUNT][EV_COUNT-1] = {{EMF,TEMPERATURE,FINGERPRINTS},{EMF,TEMPERATURE,SOUND},{EMF,FINGERPRINTS,SOUND},{TEMPERATURE,FINGERPRINTS,SOUND}};
   for(int i = 0; i<GHOST_COUNT; i++){
     for(int j = 0; j < EV_COUNT-1; j++){
-      house->variantEvidence[i][j] = variantCombinations[i][j];
+      house->variantCombinations[i][j] = variantCombinations[i][j];
     }
   }
   sem_init(&house->mutex, 0, 1);
@@ -72,21 +77,6 @@ void populateRooms(HouseType* house) {
     addRoom(&house->rooms, living_room);
     addRoom(&house->rooms, garage);
     addRoom(&house->rooms, utility_room);
-}
-/*
-    Prints all data in our house in a readable format.
-    in: house - our house
-*/
-void printHouse(HouseType* house) {
-  for(RoomNodeType* it = house->rooms.head; it!=NULL; it=it->next) {
-    printRoom(it->room);
-  }
-  printf("SHARED EVIDENCE LIST: ");
-  for(EvidenceNodeType* it = house->sharedEvidence.head; it!=NULL; it=it->next) {
-    char evidenceStr[MAX_STR];
-    evidenceToString(*it->evidence, evidenceStr);
-    printf("%s, ", evidenceStr);
-  }
 }
 /*
     Cleans up our house and all data within, freeing all dynamic memory in our program.

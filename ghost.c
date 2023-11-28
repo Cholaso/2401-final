@@ -2,19 +2,31 @@
 //101200961       : 101253438
 #include "defs.h"
 
-void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, sem_t *mutex, int* sufficientEvidenceFound, GhostType **ghost) {
+/*
+    initializes a ghost with all of its necessary information:
+
+    in: variant - the type of ghost it is
+    in: variantEvidences - a pointer to array of possible evidences the type can leave behind
+    in: room - the room that it starts in
+    in: mutex - the mutex that the ghost thread will obey
+    in: sufficientEvidenceFound - a flag that the ghost checks to see if the hunters have won or not (meaning if the game is over or not)
+    in/out ghost - the ghost we are initializing
+*/
+void initGhost(GhostClass variant, EvidenceType (*variantEvidences)[EV_COUNT-1], RoomType *room, sem_t *mutex, int* sufficientEvidenceFound, GhostType **ghost) {
   *ghost = (GhostType*) malloc(sizeof(GhostType));
   (*ghost)->ghostVariant = variant;
   (*ghost)->room = room;
   (*ghost)->boredom = 0;
-  (*ghost)->possibleEvidence = variantEvidence;
+  (*ghost)->possibleEvidences = variantEvidences;
   (*ghost)->mutex = mutex;
   (*ghost)->sufficientEvidenceFound = sufficientEvidenceFound;
 }
 
 /* 
-    Creates a ghost and adds it to a random room in our house
-    in/out: house - The house we add the ghost to
+    creates a ghost on the heap and adds it to a random room in our house (except the van)
+    in/out: house - the house we add the ghost to
+    
+    returns: a pointer to the ghost we just added
 */
 GhostType* createGhost(HouseType* house) {
   GhostType* ghost;
@@ -24,24 +36,36 @@ GhostType* createGhost(HouseType* house) {
     current = current->next;
   }
   GhostClass variant = randomGhost();
-  EvidenceType (*possibleEvidence)[EV_COUNT-1] = &house->variantEvidence[variant];
+  EvidenceType (*possibleEvidence)[EV_COUNT-1] = &house->variantCombinations[variant];
   initGhost(variant, possibleEvidence, current->room, &house->mutex, &house->sufficientEvidenceFound, &ghost);
   current->room->ghost = ghost;
   l_ghostInit(ghost->ghostVariant, current->room->name);
   return ghost;
 }
+
 /* 
-    leaves evidence in the current room. Allowed evidence is defined by ghost type.
+    Removes our ghost from the house.
+    in/out: ghost - our ghost
+*/
+void removeGhost(GhostType* ghost) {
+  ghost->room->ghost = NULL;
+  ghost->room = NULL;
+  if(ghost->boredom >= BOREDOM_MAX) l_ghostExit(LOG_BORED);
+}
+
+/* 
+    leaves evidence in the current room, depending on which variant the ghost is
     in/out: ghost - our ghost
 */
 void leaveEvidence(GhostType* ghost) {
   int evidenceChoice = randInt(0,EV_COUNT-1);
-  EvidenceType* evidence = *(ghost->possibleEvidence)+evidenceChoice;
+  EvidenceType* evidence = *(ghost->possibleEvidences)+evidenceChoice;
   addEvidence(&ghost->room->evidenceLeft, evidence);
   l_ghostEvidence(*evidence, ghost->room->name);
 }
+
 /* 
-    Ghost moves from it's current room to a random neighboring room.
+    makes the ghost move from its current room to a random neighboring room
     in/out: ghost - our ghost
 */
 void changeRoom(GhostType* ghost){
@@ -96,13 +120,4 @@ void* ghostActivity(void* voidGhost) {
   removeGhost(ghost);
   sem_post(ghost->mutex);
   return NULL;
-}
-/* 
-    Removes our ghost from the house.
-    in/out: ghost - our ghost
-*/
-void removeGhost(GhostType* ghost) {
-  ghost->room->ghost = NULL;
-  ghost->room = NULL;
-  if(ghost->boredom >= BOREDOM_MAX) l_ghostExit(LOG_BORED);
 }

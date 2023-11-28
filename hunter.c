@@ -2,14 +2,24 @@
 //101200961       : 101253438
 #include "defs.h"
 
-void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], sem_t* mutex, int* sufficientEvidenceFound, HunterType **hunter) {
+/*
+    initializes a hunter with all of its necessary information:
+    
+    in: name - the hunter's name
+    in: device - the device that the hunter will have to read one evidence type
+    in: sharedEvidence - a pointer to a list of shared evidence all hunters can see and add to
+    in: variantCombinations - a pointer to all possible combinations of evidences that a ghost can leave behind
+    in: mutex - the mutex that the hunter thread will obey
+    in: sufficientEvidenceFound - a flag that the hunters check and can update to indicate if they can determine the ghost type (and end the game)
+*/
+void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantCombinations)[4][3], sem_t* mutex, int* sufficientEvidenceFound, HunterType **hunter) {
   *hunter = (HunterType*) malloc(sizeof(HunterType));
   strcpy((*hunter)->name, name);
   (*hunter)->room = room;
   (*hunter)->device = device;
   (*hunter)->sharedEvidence = sharedEvidence;
   (*hunter)->fear = (*hunter)->boredom = 0;
-  (*hunter)->variantEvidence = variantEvidence;
+  (*hunter)->variantCombinations = variantCombinations;
   (*hunter)->mutex = mutex;
   (*hunter)->sufficientEvidenceFound = sufficientEvidenceFound;
 }
@@ -23,7 +33,7 @@ void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListTyp
 void createHunter(char *name, HouseType *house, EvidenceType device) {
   HunterType* hunter;
   RoomType* van = house->rooms.head->room;
-  initHunter(name, van, device, &house->sharedEvidence,&house->variantEvidence, &house->mutex, &house->sufficientEvidenceFound, &hunter);
+  initHunter(name, van, device, &house->sharedEvidence,&house->variantCombinations, &house->mutex, &house->sufficientEvidenceFound, &hunter);
   addHunter(hunter, van);
   house->hunters[(house->hunterCount)++] = hunter;
   l_hunterInit(name, device);
@@ -72,17 +82,10 @@ void moveHunter(HunterType* hunter){
   addHunter(hunter, currentRoom->room);
   l_hunterMove(hunter->name, currentRoom->room->name);
 }
+
 /*
-    prints the hunter in a readable format.
-    in: hunter - our hunter
-*/
-void printHunter(HunterType* hunter) {
-  char evidence[MAX_STR];
-  evidenceToString(hunter->device, evidence);
-  printf("| Name: %s | Boredom: %d | Fear: %d | Device: %s | Location: %s |\n", hunter->name, hunter->boredom, hunter->fear, evidence, hunter->room->name);
-}
-/*
-    hunter reviews evidence, returns true if there is enough evidence to identify the ghost.
+    lets a hunter review evidence, which switches a flag if there is enough evidence to identify the ghost. the ghost and every other hunters all see this flag.
+
     in/out: hunter - hunter reviewing evidence
 */
 void reviewEvidence(HunterType* hunter) {
@@ -144,8 +147,9 @@ void* hunterActivity(void* voidHunter) {
   return NULL;
 }
 /*
-    Main control flow for hunter threads. 
-    in/out
+    lets a hunter collect evidence. if there is evidence in the hunters' current room that matches the device the hunter has, they will remove it from the room. they will then check to see if it has been collected already. if not, it will be added to the hunters' shared evidence pile.
+
+    in/out: hunter - the hunter that will collect the evidence
 */
 void collectEvidence(HunterType* hunter){
   EvidenceType* evidence = removeEvidence(&hunter->room->evidenceLeft, hunter->device);

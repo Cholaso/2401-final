@@ -88,6 +88,5 @@ void ghostToString(enum GhostClass ghost, char* buffer) {
         default:
             strcpy(buffer, "Unknown");
             break;
-        
     }
 }
