@@ -4,7 +4,7 @@ project(2401-final VERSION 0.1.0 LANGUAGES C)
 include(CTest)
 enable_testing()
 
-add_executable(fp evidence.c house.c hunter.c init.c logger.c main.c room.c utils.c ghost.c)
+add_executable(fp evidence.c house.c hunter.c logger.c main.c room.c utils.c ghost.c)
 
 
 target_compile_options(fp PRIVATE -Wall -Wextra -Werror -g -fsanitize=thread)

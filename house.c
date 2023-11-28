@@ -2,6 +2,23 @@
 //101200961       : 101253438
 #include "defs.h"
 
+void initHouse(HouseType *house) {
+  initRoomList(&house->rooms);
+  initEvidenceList(&house->sharedEvidence);
+  for(int i = 0; i<NUM_HUNTERS; i++) {
+    house->hunters[i] = NULL;
+  }
+  house->hunterCount = 0;
+  EvidenceType variantCombinations[GHOST_COUNT][EV_COUNT-1] = {{EMF,TEMPERATURE,FINGERPRINTS},{EMF,TEMPERATURE,SOUND},{EMF,FINGERPRINTS,SOUND},{TEMPERATURE,FINGERPRINTS,SOUND}};
+  for(int i = 0; i<GHOST_COUNT; i++){
+    for(int j = 0; j < EV_COUNT-1; j++){
+      house->variantEvidence[i][j] = variantCombinations[i][j];
+    }
+  }
+  sem_init(&house->mutex, 0, 1);
+  house->sufficientEvidenceFound = C_FALSE;
+}
+
 /*
     Dynamically allocates several rooms and populates the provided house.
     Note: You may modify this as long as room names and connections are maintained.

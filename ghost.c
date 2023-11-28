@@ -2,6 +2,16 @@
 //101200961       : 101253438
 #include "defs.h"
 
+void initGhost(GhostClass variant, EvidenceType (*variantEvidence)[3], RoomType *room, sem_t *mutex, int* sufficientEvidenceFound, GhostType **ghost) {
+  *ghost = (GhostType*) malloc(sizeof(GhostType));
+  (*ghost)->ghostVariant = variant;
+  (*ghost)->room = room;
+  (*ghost)->boredom = 0;
+  (*ghost)->possibleEvidence = variantEvidence;
+  (*ghost)->mutex = mutex;
+  (*ghost)->sufficientEvidenceFound = sufficientEvidenceFound;
+}
+
 /* 
     Creates a ghost and adds it to a random room in our house
     in/out: house - The house we add the ghost to

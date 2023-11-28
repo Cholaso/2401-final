@@ -13,35 +13,29 @@
 #define BOREDOM_MAX     100
 #define C_TRUE          1
 #define C_FALSE         0
-#define HUNTER_WAIT     5000 // 5000
-#define GHOST_WAIT      600 // 600
+#define HUNTER_WAIT     5000
+#define GHOST_WAIT      600
 #define NUM_HUNTERS     4
 #define FEAR_MAX        10
 #define LOGGING         C_TRUE
+#define VAN_ROOM_POS    0
 
-#define VAN_ROOM_POS 0
-
+// our typedefs
 typedef enum EvidenceType EvidenceType;
 typedef enum GhostClass GhostClass;
-// our definitions
 typedef struct Room RoomType; 
 typedef struct RoomNode RoomNodeType;
 typedef struct EvidenceNode EvidenceNodeType;
 typedef struct RoomList RoomListType;
 typedef struct EvidenceList EvidenceListType;
-typedef struct EvidenceNode EvidenceNodeType;
-
 typedef struct Hunter HunterType;
 typedef struct Ghost GhostType;
-
 typedef struct House HouseType;
 
-typedef struct args pthread_args;
-
+// our data types
 enum EvidenceType { EMF, TEMPERATURE, FINGERPRINTS, SOUND, EV_COUNT, EV_UNKNOWN };
 enum GhostClass { POLTERGEIST, BANSHEE, BULLIES, PHANTOM, GHOST_COUNT, GH_UNKNOWN };
 enum LoggerDetails { LOG_FEAR, LOG_BORED, LOG_EVIDENCE, LOG_SUFFICIENT, LOG_INSUFFICIENT, LOG_UNKNOWN };
-
 
 struct RoomList {
   RoomNodeType* head;
@@ -72,7 +66,6 @@ struct Ghost {
   EvidenceType (*possibleEvidence)[EV_COUNT-1];
   sem_t* mutex;
 };
-
 struct Room {
   char name[MAX_STR];
   RoomListType neighbors;
@@ -97,11 +90,6 @@ struct House {
   int hunterCount;
   int sufficientEvidenceFound;
   sem_t mutex;
-};
-
-struct args{
-  GhostType* ghost;
-  HouseType* house;
 };
 
 // Helper Utilies: util.c

@@ -57,8 +57,11 @@ GhostClass determineGhost(HouseType* house) {
   // return the ghost type by finding a matching array in house's combinations
   int found = C_FALSE;
   for(int i = 0; i < GHOST_COUNT; i++){
-    for(int j = 0; j < EV_COUNT; j++){
-      if(house->variantEvidence[i][j] != sortedEv[j]) break;
+    for(int j = 0; j < EV_COUNT-1; j++){
+      if(house->variantEvidence[i][j] != sortedEv[j]){
+        found = C_FALSE;
+        break;       
+      }
       found = C_TRUE;
     }
     if(found)return i;

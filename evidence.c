@@ -1,6 +1,12 @@
 //Nicholas O'Neil : Jazeel Abdul-Jabbar
 //101200961       : 101253438
 #include "defs.h"
+
+void initEvidenceList(EvidenceListType *evidenceList) {
+  evidenceList->head = evidenceList->tail = NULL;
+  evidenceList->size = 0;
+}
+
 /* 
     Adds evidence to the evidence list
     in/out: evidenceList - the list that we store the evidence in

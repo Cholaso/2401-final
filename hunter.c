@@ -2,6 +2,18 @@
 //101200961       : 101253438
 #include "defs.h"
 
+void initHunter(char *name, RoomType *room, EvidenceType device, EvidenceListType *sharedEvidence, EvidenceType (*variantEvidence)[4][3], sem_t* mutex, int* sufficientEvidenceFound, HunterType **hunter) {
+  *hunter = (HunterType*) malloc(sizeof(HunterType));
+  strcpy((*hunter)->name, name);
+  (*hunter)->room = room;
+  (*hunter)->device = device;
+  (*hunter)->sharedEvidence = sharedEvidence;
+  (*hunter)->fear = (*hunter)->boredom = 0;
+  (*hunter)->variantEvidence = variantEvidence;
+  (*hunter)->mutex = mutex;
+  (*hunter)->sufficientEvidenceFound = sufficientEvidenceFound;
+}
+
 /*
     Creates a hunter in our house and places them in the van.
     in: name - Name of our hunter
