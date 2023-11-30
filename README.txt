@@ -4,6 +4,9 @@ Nicholas O'Neil : Jazeel Abdul-Jabbar
 FINAL PROJECT for COMP2401D
 Carleton University, Fall 2023
 
+BONUS MARKS:
+  We used a private GitHub repository. Check screenshot.png to see the commits.
+
 PROGRAM DESCRIPTION:
   fp: A program that simulates four hunters, each with a unique evidence-detecting device, and an evidence-leaving ghost, with the hunters and ghost all independently moving and interacting within a large house. There are four possible variants of ghosts, each having a unique fingerprint of three evidence types combinations.The hunters will win if they can determine which variant the ghost is based on the evidence they can collect, and the ghost will win if the hunters get too scared/bored to do so on time.
 
@@ -18,6 +21,7 @@ LIST OF FILES INCLUDED:
   Makefile
   README.txt
   room.c
+  screenshot.png
   utils.c
 
 INSTRUCTIONS FOR COMPILING:

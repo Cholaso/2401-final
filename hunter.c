@@ -46,6 +46,7 @@ void addHunter(HunterType* hunter, RoomType* room){
     room->hunters[(room->hunterCount)++] = hunter;
     hunter->room = room;
 }
+
 /*
     removes a hunter from a hunter array, and shifts the rest of the array to maintain arraylist properties.
     in/out: hunter - hunter getting removed
@@ -65,6 +66,7 @@ void removeHunter(HunterType* hunter) {
   hunter->room->hunterCount--;
   hunter->room = NULL;
 }
+
 /*
     moves a hunter from current room to a random neighbor of the current room.
     in/out: hunter - hunter getting moved
@@ -91,6 +93,22 @@ int reviewEvidence(HunterType* hunter) {
   l_hunterReview(hunter->name, sufficient ? LOG_SUFFICIENT : LOG_INSUFFICIENT);
   return sufficient;
 }
+
+/*
+    lets a hunter collect evidence. if there is evidence in the hunters' current room that matches the device the hunter has, they will remove it from the room. they will then check to see if it has been collected already. if not, it will be added to the hunters' shared evidence pile.
+
+    in/out: hunter - the hunter that will collect the evidence
+*/
+void collectEvidence(HunterType* hunter){
+  EvidenceType* evidence = removeEvidence(&hunter->room->evidenceLeft, hunter->device);
+  if(evidence==NULL) return; // no evidence found for hunter to collect
+  for(EvidenceNodeType* it = hunter->sharedEvidence->head; it!=NULL; it=it->next) {
+    if(it->evidence == evidence) return; // it is already collected
+  }
+  addEvidence(hunter->sharedEvidence, evidence);
+  l_hunterCollect(hunter->name, *evidence, hunter->room->name);
+}
+
 /*
     Main control flow for hunter threads. Hunters make random descisions that are handled here. 
     in/out: voidHunter - void pointer to our hunter
@@ -134,18 +152,4 @@ void* hunterActivity(void* voidHunter) {
   l_hunterExit(hunter->name, reasonForExit);
   sem_post(hunter->mutex);
   return NULL;
-}
-/*
-    lets a hunter collect evidence. if there is evidence in the hunters' current room that matches the device the hunter has, they will remove it from the room. they will then check to see if it has been collected already. if not, it will be added to the hunters' shared evidence pile.
-
-    in/out: hunter - the hunter that will collect the evidence
-*/
-void collectEvidence(HunterType* hunter){
-  EvidenceType* evidence = removeEvidence(&hunter->room->evidenceLeft, hunter->device);
-  if(evidence==NULL) return; // no evidence found for hunter to collect
-  for(EvidenceNodeType* it = hunter->sharedEvidence->head; it!=NULL; it=it->next) {
-    if(it->evidence == evidence) return; // it is already collected
-  }
-  addEvidence(hunter->sharedEvidence, evidence);
-  l_hunterCollect(hunter->name, *evidence, hunter->room->name);
 }
